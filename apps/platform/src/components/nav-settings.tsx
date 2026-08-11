@@ -11,7 +11,7 @@ import {
 const workspaceItems = [
   {
     title: "Settings",
-    to: "/$workspaceId/settings/" as const,
+    to: "/$workspaceId/settings" as const,
     icon: Settings2Icon,
   },
   {

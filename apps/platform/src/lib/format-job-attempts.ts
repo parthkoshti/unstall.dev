@@ -1,7 +1,3 @@
-function toDisplayAttemptCount(attemptsMade: number) {
-  return attemptsMade + 1;
-}
-
 function toDisplayMaxAttempts(maxAttempts: number) {
   return maxAttempts > 0 ? maxAttempts : 1;
 }
@@ -14,26 +10,22 @@ export function formatJobAttemptsValue(
   attemptsMade: number,
   maxAttempts?: number,
 ) {
-  const current = toDisplayAttemptCount(attemptsMade);
-
   if (maxAttempts != null) {
     const max = toDisplayMaxAttempts(maxAttempts);
-    return `${current} / ${max}`;
+    return `${attemptsMade} / ${max}`;
   }
 
-  return String(current);
+  return String(attemptsMade);
 }
 
 export function formatJobAttemptsLabel(
   attemptsMade: number,
   maxAttempts?: number,
 ) {
-  const current = toDisplayAttemptCount(attemptsMade);
-
   if (maxAttempts != null) {
     const max = toDisplayMaxAttempts(maxAttempts);
-    return `${current}/${max} ${attemptNoun(max)}`;
+    return `${attemptsMade}/${max} ${attemptNoun(max)}`;
   }
 
-  return `${current} ${attemptNoun(current)}`;
+  return `${attemptsMade} ${attemptNoun(attemptsMade)}`;
 }

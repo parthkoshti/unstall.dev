@@ -79,6 +79,7 @@ export function applyQueueAdded(
             "waiting-children": 0,
             schedulers: 0,
           },
+          workers: 0,
         },
       ];
     },
@@ -144,6 +145,7 @@ function mergeLatestJob(
     timestamp: incoming.timestamp || existing.timestamp,
     processedOn: incoming.processedOn ?? existing.processedOn,
     finishedOn: incoming.finishedOn ?? existing.finishedOn,
+    attemptsMade: incoming.attemptsMade ?? existing.attemptsMade,
     delay: incoming.delay ?? existing.delay,
     opts: incoming.opts ?? existing.opts,
   };

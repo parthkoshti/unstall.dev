@@ -22,6 +22,7 @@ const sampleQueues: EnvironmentQueueRow[] = [
       "waiting-children": 0,
       schedulers: 0,
     },
+    workers: 0,
   },
 ];
 

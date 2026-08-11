@@ -17,6 +17,7 @@ export type EnvironmentQueueRow = {
     "waiting-children": number;
     schedulers: number;
   };
+  workers: number;
 };
 
 const thClass =
