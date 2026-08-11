@@ -268,6 +268,19 @@ export function JobDetailPanel({
               disabled={showSummarySkeleton || !job || !canWrite}
               onClick={() =>
                 void runAction(() =>
+                  rpcClient.jobActions.replay({ redisInstanceId, queueName, jobId }),
+                )
+              }
+            >
+              <CopyIcon />
+              Replay
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={showSummarySkeleton || !job || !canWrite}
+              onClick={() =>
+                void runAction(() =>
                   rpcClient.jobActions.promote({ redisInstanceId, queueName, jobId }),
                 )
               }

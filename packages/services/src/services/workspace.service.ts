@@ -1,5 +1,14 @@
 import { eq } from "drizzle-orm";
-import { workspaceMembers, workspaces } from "@unqueue/db/schema";
+import {
+  environments,
+  workspaceMembers,
+  workspaces,
+} from "@unqueue/db/schema";
+import {
+  createId,
+  DEFAULT_ENVIRONMENT_NAME,
+  DEFAULT_ENVIRONMENT_NAMES,
+} from "@unqueue/shared";
 import type { Logger } from "@unqueue/logger";
 import type { ServiceDeps } from "../context.js";
 import { notFound } from "../errors.js";
@@ -46,6 +55,42 @@ export function createWorkspaceService(deps: ServiceDeps, logger: Logger) {
 
       if (!updated) notFound("Workspace");
       return updated;
+    },
+
+    async create(actor: Actor, name: string) {
+      logger.debug({ userId: actor.userId, name }, "Creating workspace");
+
+      const workspaceId = createId();
+      const memberId = createId();
+
+      const defaultEnvironments = DEFAULT_ENVIRONMENT_NAMES.map((envName) => ({
+        id: createId(),
+        workspaceId,
+        name: envName,
+      }));
+
+      const defaultEnvironment = defaultEnvironments.find(
+        (env) => env.name === DEFAULT_ENVIRONMENT_NAME,
+      );
+
+      await deps.db.insert(workspaces).values({
+        id: workspaceId,
+        name,
+      });
+
+      await deps.db.insert(workspaceMembers).values({
+        id: memberId,
+        workspaceId,
+        userId: actor.userId,
+        role: "owner",
+      });
+
+      await deps.db.insert(environments).values(defaultEnvironments);
+
+      return {
+        workspaceId,
+        environmentId: defaultEnvironment?.id ?? defaultEnvironments[0]!.id,
+      };
     },
   };
 }

@@ -30,6 +30,16 @@ const workspaceRouter = {
     return context.services.workspace.list(toActor(context));
   }),
 
+  create: base
+    .input(z.object({ name: z.string().min(1).max(64) }))
+    .use(authed)
+    .handler(async ({ context, input }) => {
+      return context.services.workspace.create(
+        toActor(context),
+        input.name,
+      );
+    }),
+
   get: base
     .input(z.object({ workspaceId: z.string().length(24) }))
     .use(authed)
@@ -381,6 +391,18 @@ const jobRouter = {
     .handler(async ({ context, input }) => {
       return context.services.job.get(toActor(context), input);
     }),
+
+  listFailedGroups: base
+    .input(
+      z.object({
+        redisInstanceId: z.string().length(24),
+        queueName: z.string(),
+      }),
+    )
+    .use(authed)
+    .handler(async ({ context, input }) => {
+      return context.services.job.listFailedGroups(toActor(context), input);
+    }),
 };
 
 const jobActionInput = z.object({
@@ -427,6 +449,20 @@ const jobActionsRouter = {
     .use(authed)
     .handler(async ({ context, input }) => {
       return context.services.jobActions.bulkRetry(toActor(context), input);
+    }),
+
+  replay: base
+    .input(jobActionInput)
+    .use(authed)
+    .handler(async ({ context, input }) => {
+      return context.services.jobActions.replay(toActor(context), input);
+    }),
+
+  bulkReplay: base
+    .input(bulkJobActionInput)
+    .use(authed)
+    .handler(async ({ context, input }) => {
+      return context.services.jobActions.bulkReplay(toActor(context), input);
     }),
 
   bulkRemove: base

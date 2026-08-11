@@ -57,6 +57,15 @@ export type QueueMeta = {
   workers: number;
 };
 
+export type FailedJobGroup = {
+  name: string;
+  count: number;
+  latestJobId: string;
+  latestFailedAt?: number;
+  failedReason?: string;
+  stacktrace?: string[];
+};
+
 export type RedisInstanceConfig = {
   id: string;
   workspaceId: string;

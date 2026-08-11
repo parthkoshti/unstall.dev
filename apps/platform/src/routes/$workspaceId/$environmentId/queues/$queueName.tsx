@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import {
+  CopyIcon,
   RefreshCwIcon,
   RotateCcwIcon,
   Trash2Icon,
@@ -34,6 +35,7 @@ import {
 } from "@/lib/socket";
 import { Button } from "@/components/ui/button";
 import { JobDetailPanel } from "@/components/job-detail-panel";
+import { FailedJobGroupsTable } from "@/components/failed-job-groups-table";
 import {
   QueueJobsTable,
   QueueJobsTableSkeleton,
@@ -57,6 +59,7 @@ const jobFilterStates = [
   "latest",
   "completed",
   "failed",
+  "errors",
   "active",
   "prioritized",
   "waiting",
@@ -160,18 +163,27 @@ function QueuePage() {
 
   const jobsQuery = useInfiniteQuery({
     queryKey: ["jobs", redisInstanceId, queueName, state],
-    queryFn: ({ pageParam }) =>
-      rpcClient.job.list({
+    queryFn: ({ pageParam }) => {
+      const apiState = state === "latest" ? "all" : (state as "waiting" | "active" | "completed" | "failed" | "prioritized" | "waiting-children" | "delayed" | "paused");
+      return rpcClient.job.list({
         redisInstanceId,
         queueName,
-        state: state === "latest" ? "all" : state,
+        state: apiState,
         start: pageParam * PAGE_SIZE,
         end: pageParam * PAGE_SIZE + PAGE_SIZE - 1,
-      }),
+      });
+    },
     initialPageParam: 0,
     getNextPageParam: (lastPage, _allPages, lastPageParam) =>
       lastPage.length < PAGE_SIZE ? undefined : lastPageParam + 1,
-    enabled: state !== "schedulers",
+    enabled: state !== "schedulers" && state !== "errors",
+  });
+
+  const errorsQuery = useQuery({
+    queryKey: ["failed-groups", redisInstanceId, queueName],
+    queryFn: () =>
+      rpcClient.job.listFailedGroups({ redisInstanceId, queueName }),
+    enabled: state === "errors",
   });
 
   const jobs = jobsQuery.data?.pages.flat() ?? [];
@@ -301,10 +313,11 @@ function QueuePage() {
   const selectAll = async () => {
     setSelectingAll(true);
     try {
+      const apiState = state === "latest" ? "all" : (state as "waiting" | "active" | "completed" | "failed" | "prioritized" | "waiting-children" | "delayed" | "paused");
       const ids = await rpcClient.job.listIds({
         redisInstanceId,
         queueName,
-        state: state === "latest" ? "all" : state,
+        state: apiState,
       });
       setSelected(new Set(ids));
     } finally {
@@ -314,6 +327,16 @@ function QueuePage() {
 
   const bulkRetry = async () => {
     await rpcClient.jobActions.bulkRetry({
+      redisInstanceId,
+      queueName,
+      jobIds: [...selected],
+    });
+    setSelected(new Set());
+    jobsQuery.refetch();
+  };
+
+  const bulkReplay = async () => {
+    await rpcClient.jobActions.bulkReplay({
       redisInstanceId,
       queueName,
       jobIds: [...selected],
@@ -587,6 +610,10 @@ function QueuePage() {
                 <RotateCcwIcon />
                 Retry {hasSelection ? `(${selected.size})` : ""}
               </Button>
+              <Button size="sm" variant="outline" disabled={!hasSelection} onClick={() => void bulkReplay()}>
+                <CopyIcon />
+                Replay {hasSelection ? `(${selected.size})` : ""}
+              </Button>
               <Button
                 size="sm"
                 variant="destructive"
@@ -606,7 +633,14 @@ function QueuePage() {
           ref={scrollRef}
           className="min-h-0 flex-1 overflow-y-auto overscroll-y-none"
         >
-          {isLoadingJobs ? (
+          {state === "errors" ? (
+            <FailedJobGroupsTable
+              groups={errorsQuery.data ?? []}
+              totalFailed={queueMetaQuery.data?.counts.failed ?? 0}
+              isLoading={errorsQuery.isLoading}
+              onOpenJob={openJobSheet}
+            />
+          ) : isLoadingJobs ? (
             <QueueJobsTableSkeleton rows={QUEUE_TABLE_SKELETON_ROWS} />
           ) : (
             <QueueJobsTable

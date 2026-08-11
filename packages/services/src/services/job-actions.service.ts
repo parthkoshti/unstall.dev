@@ -1,8 +1,10 @@
 import {
   bulkRemove,
+  bulkReplay,
   bulkRetry,
   promoteJob,
   removeJob,
+  replayJob,
   retryJob,
 } from "@unqueue/bullmq";
 import type { Logger } from "@unqueue/logger";
@@ -107,6 +109,47 @@ export function createJobActionsService(deps: ServiceDeps, logger: Logger) {
         input.redisInstanceId,
       );
       return bulkRetry(connection, input.queueName, prefix, input.jobIds);
+    },
+
+    async replay(
+      actor: Actor,
+      input: {
+        redisInstanceId: string;
+        queueName: string;
+        jobId: string;
+      },
+    ) {
+      logger.info(input, "Replaying job");
+
+      const { connection, prefix } = await getConnection(
+        actor,
+        input.redisInstanceId,
+      );
+      return replayJob(connection, input.queueName, prefix, input.jobId);
+    },
+
+    async bulkReplay(
+      actor: Actor,
+      input: {
+        redisInstanceId: string;
+        queueName: string;
+        jobIds: string[];
+      },
+    ) {
+      logger.info(
+        {
+          redisInstanceId: input.redisInstanceId,
+          queueName: input.queueName,
+          count: input.jobIds.length,
+        },
+        "Bulk replaying jobs",
+      );
+
+      const { connection, prefix } = await getConnection(
+        actor,
+        input.redisInstanceId,
+      );
+      return bulkReplay(connection, input.queueName, prefix, input.jobIds);
     },
 
     async bulkRemove(

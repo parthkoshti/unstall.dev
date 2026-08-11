@@ -1,5 +1,6 @@
 import {
   getJob,
+  listFailedJobGroups,
   listJobs,
   listJobIds,
   type JobListState,
@@ -67,6 +68,33 @@ export function createJobService(deps: ServiceDeps, logger: Logger) {
     ) {
       const { connection, prefix } = await getConnection(actor, input.redisInstanceId);
       return listJobIds(connection, input.queueName, prefix, input.state);
+    },
+
+    async listFailedGroups(
+      actor: Actor,
+      input: {
+        redisInstanceId: string;
+        queueName: string;
+      },
+    ) {
+      logger.debug(
+        {
+          redisInstanceId: input.redisInstanceId,
+          queueName: input.queueName,
+        },
+        "Listing failed job groups",
+      );
+
+      const { connection, prefix, queuePool } = await getConnection(
+        actor,
+        input.redisInstanceId,
+      );
+      return listFailedJobGroups(
+        connection,
+        input.queueName,
+        prefix,
+        queuePool,
+      );
     },
 
     async get(

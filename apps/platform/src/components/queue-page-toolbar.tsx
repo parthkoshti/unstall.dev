@@ -5,6 +5,7 @@ type QueueCounts = QueueMeta["counts"];
 type QueueMetrics = Awaited<ReturnType<typeof rpcClient.queue.getMetrics>>;
 type MetricsWindow = "1m" | "1h" | "24h" | "7d";
 import {
+  AlertTriangleIcon,
   CalendarIcon,
   CheckCircle2Icon,
   CirclePlusIcon,
@@ -30,6 +31,7 @@ export type QueueJobFilterState =
   | "latest"
   | "completed"
   | "failed"
+  | "errors"
   | "active"
   | "prioritized"
   | "waiting"
@@ -46,6 +48,7 @@ export const QUEUE_STATE_TABS: Array<{
   { state: "latest", label: "Latest", icon: HistoryIcon },
   { state: "completed", label: "Completed", icon: CheckCircle2Icon },
   { state: "failed", label: "Failed", icon: XCircleIcon },
+  { state: "errors", label: "Errors", icon: AlertTriangleIcon },
   { state: "active", label: "Active", icon: ZapIcon },
   { state: "prioritized", label: "Prioritized", icon: CirclePlusIcon },
   { state: "waiting", label: "Waiting", icon: ClockIcon },
@@ -66,6 +69,8 @@ const QUEUE_TAB_ACTIVE_CLASS: Record<QueueJobFilterState, string> = {
     "data-active:border-emerald-500 data-active:bg-emerald-500/10 data-active:text-emerald-600 group-data-[variant=line]/tabs-list:data-active:shadow-[inset_0_-4px_0_0_var(--color-emerald-500)] dark:data-active:text-emerald-400 dark:group-data-[variant=line]/tabs-list:data-active:border-emerald-500",
   failed:
     "data-active:border-destructive data-active:bg-destructive/10 data-active:text-destructive group-data-[variant=line]/tabs-list:data-active:shadow-[inset_0_-4px_0_0_var(--color-destructive)] dark:group-data-[variant=line]/tabs-list:data-active:border-destructive",
+  errors:
+    "data-active:border-orange-500 data-active:bg-orange-500/10 data-active:text-orange-600 group-data-[variant=line]/tabs-list:data-active:shadow-[inset_0_-4px_0_0_var(--color-orange-500)] dark:data-active:text-orange-400 dark:group-data-[variant=line]/tabs-list:data-active:border-orange-500",
   active:
     "data-active:border-blue-500 data-active:bg-blue-500/10 data-active:text-blue-600 group-data-[variant=line]/tabs-list:data-active:shadow-[inset_0_-4px_0_0_var(--color-blue-500)] dark:data-active:text-blue-400 dark:group-data-[variant=line]/tabs-list:data-active:border-blue-500",
   prioritized:
@@ -109,6 +114,7 @@ export function getQueueTabJobCount(
 ) {
   if (!counts) return 0;
   if (state === "latest") return getLatestJobCount(counts);
+  if (state === "errors") return counts.failed;
   return counts[state] ?? 0;
 }
 
@@ -118,6 +124,13 @@ export function getQueueTabEmptyState(state: QueueJobFilterState) {
       title: "No schedulers",
       description:
         "Repeatable job schedulers will appear here when configured.",
+    };
+  }
+
+  if (state === "errors") {
+    return {
+      title: "No errors",
+      description: "Failed jobs grouped by type will appear here.",
     };
   }
 
@@ -386,7 +399,7 @@ export function QueueStateTabs({
       >
         <TabsList
           variant="line"
-          className="grid h-auto! w-full grid-cols-3 items-stretch gap-0 overflow-visible rounded-none bg-transparent p-0 group-data-horizontal/tabs:h-auto! sm:grid-cols-5 xl:grid-cols-10"
+          className="grid h-auto! w-full grid-cols-3 items-stretch gap-0 overflow-visible rounded-none bg-transparent p-0 group-data-horizontal/tabs:h-auto! sm:grid-cols-5 xl:grid-cols-11"
         >
           {QUEUE_STATE_TABS.map((tab) => {
             const Icon = tab.icon;
@@ -400,7 +413,7 @@ export function QueueStateTabs({
                 disabled={isLoading}
                 className={cn(
                   "relative flex h-auto! min-h-14 w-full min-w-0 flex-col items-start justify-center gap-1.5 rounded-none border-t border-r border-b-0 border-border/60 px-3 py-3 text-left",
-                  "max-sm:nth-[3n+1]:border-l sm:max-xl:nth-[5n+1]:border-l xl:nth-[10n+1]:border-l",
+                  "max-sm:nth-[3n+1]:border-l sm:max-xl:nth-[5n+1]:border-l xl:nth-[11n+1]:border-l",
                   "whitespace-normal after:hidden",
                   "text-muted-foreground hover:bg-muted/30 hover:text-foreground",
                   QUEUE_TAB_ACTIVE_CLASS[tab.state],

@@ -34,7 +34,7 @@ function createRedisAccessDb(rows: unknown[]) {
 
 describe("assertEnvironmentAccess", () => {
   it("returns workspace when user has access", async () => {
-    const db = createMockDb([{ workspaceId: "ws1" }], [{ role: "viewer" }]);
+    const db = createMockDb([{ workspaceId: "ws1", role: "viewer" }]);
 
     const result = await assertEnvironmentAccess(
       db,

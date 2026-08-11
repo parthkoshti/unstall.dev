@@ -3,7 +3,7 @@ import type { RedisConnection } from "./redis-types.js";
 import { withQueue } from "./queue-runner.js";
 import type { QueuePoolContext } from "./queue-pool-context.js";
 import { jobLogSchema } from "@unqueue/validators";
-import type { JobDetail, JobSummary, ParsedLog, QueueCounts, QueueMeta } from "./types.js";
+import type { FailedJobGroup, JobDetail, JobSummary, ParsedLog, QueueCounts, QueueMeta } from "./types.js";
 
 export async function getQueueMeta(
   connection: RedisConnection,
@@ -145,6 +145,50 @@ export async function listJobs(
 
       const jobs = await queue.getJobs([state], start, end, false);
       return toJobDetails(queue, jobs, state);
+    },
+    pool,
+  );
+}
+
+export async function listFailedJobGroups(
+  connection: RedisConnection,
+  queueName: string,
+  prefix: string,
+  pool?: QueuePoolContext,
+): Promise<FailedJobGroup[]> {
+  return withQueue(
+    connection,
+    queueName,
+    prefix,
+    async (queue) => {
+      const jobs = await queue.getJobs(["failed"], 0, 999);
+      const groups = new Map<string, FailedJobGroup>();
+
+      for (const job of jobs) {
+        const existing = groups.get(job.name);
+        if (existing) {
+          existing.count++;
+          if ((job.finishedOn ?? 0) > (existing.latestFailedAt ?? 0)) {
+            existing.latestFailedAt = job.finishedOn;
+            existing.latestJobId = job.id ?? "";
+            existing.failedReason = job.failedReason;
+            existing.stacktrace = job.stacktrace?.length
+              ? job.stacktrace
+              : undefined;
+          }
+        } else {
+          groups.set(job.name, {
+            name: job.name,
+            count: 1,
+            latestJobId: job.id ?? "",
+            latestFailedAt: job.finishedOn,
+            failedReason: job.failedReason,
+            stacktrace: job.stacktrace?.length ? job.stacktrace : undefined,
+          });
+        }
+      }
+
+      return Array.from(groups.values()).sort((a, b) => b.count - a.count);
     },
     pool,
   );
