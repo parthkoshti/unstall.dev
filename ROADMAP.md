@@ -1,6 +1,6 @@
 # Roadmap
 
-Feature audit and priorities for unqueue.dev. Last reviewed: 2026-08-11.
+Feature audit and priorities for unqueue.dev. Last reviewed: 2026-08-12.
 
 ## Current Feature Set
 
@@ -17,6 +17,7 @@ Feature audit and priorities for unqueue.dev. Last reviewed: 2026-08-11.
 - Multi-environment Redis instance management with encrypted credentials
 - Dark/light theme
 - Demo worker with 12 queues and 30+ job types
+- Scheduler / cron management with list, run now, edit, and remove actions
 
 ## Audit: Missing Features
 
@@ -34,15 +35,15 @@ Competitors (Workbench, Muleta, bullstudio, Durabull) all render parent/child jo
 
 **Why:** Flows are how complex multi-step pipelines work (validate → charge → ship → notify). Without this, users can't debug why a parent job is stuck waiting.
 
-#### Scheduler / Cron Management
+#### ~~Scheduler / Cron Management~~ ✅
 
-Workbench and bullmq-dash show active schedulers, last/next run times, and let you pause/resume/edit cron expressions live.
+Implemented. See [Scheduler Feature](./docs/scheduler-feature.md) for details.
 
-**Missing:**
-- No scheduler/cron management UI despite demo-worker using `upsertJobScheduler`
-- No visibility into repeatable jobs or their schedules
-- No ability to pause/resume/edit cron expressions from the dashboard
-- No "run scheduler immediately" action for verification
+- List all schedulers with schedule, next/last run, execution count
+- Run now, edit cron/interval, remove actions
+- Detail panel with full scheduler metadata and options
+- RBAC: viewer for read, member for run, admin for edit/remove
+- Note: Pause/resume not available in BullMQ v5 — remove scheduler to stop, recreate to resume
 
 #### Error Triage & Failure Grouping
 
@@ -176,7 +177,7 @@ Workbench supports `tags` from job data fields to make them filterable in the UI
 | Job actions | ✅ Retry/remove/promote | ✅ + replay | ✅ + replay | ✅ + replay | ✅ Retry/remove |
 | Queue admin | ✅ Pause/drain/clean/obliterate | ✅ | ✅ | ✅ | ✅ |
 | FlowProducer DAG | ❌ | ✅ | ✅ | ❌ | ✅ |
-| Scheduler management | ❌ | ✅ | ❌ | ✅ | ❌ |
+| Scheduler management | ✅ | ✅ | ❌ | ✅ | ❌ |
 | Error grouping | ❌ | ✅ | ❌ | ❌ | ❌ |
 | Metrics/charts | ✅ In-memory | ✅ Built-in | ❌ | ✅ | ✅ |
 | Prometheus export | ❌ | ❌ | ❌ | ✅ | ❌ |
@@ -199,3 +200,4 @@ Workbench supports `tags` from job data fields to make them filterable in the UI
 | Alert engine integration | ⚠️ Unit only |
 | Realtime manager | ❌ No tests |
 | Bookmark service | ❌ No tests |
+| Scheduler service | ❌ No tests |

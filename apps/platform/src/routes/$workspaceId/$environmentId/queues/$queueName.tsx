@@ -36,6 +36,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { JobDetailPanel } from "@/components/job-detail-panel";
 import { FailedJobGroupsTable } from "@/components/failed-job-groups-table";
+import { SchedulerList } from "@/components/scheduler-list";
+import { SchedulerDetailPanel } from "@/components/scheduler-detail-panel";
 import {
   QueueJobsTable,
   QueueJobsTableSkeleton,
@@ -114,6 +116,7 @@ function QueuePage() {
   const [sheetJobId, setSheetJobId] = useState<string | undefined>(
     jobIdFromSearch,
   );
+  const [sheetSchedulerId, setSheetSchedulerId] = useState<string | undefined>();
 
   useEffect(() => {
     setSheetJobId(jobIdFromSearch);
@@ -184,6 +187,13 @@ function QueuePage() {
     queryFn: () =>
       rpcClient.job.listFailedGroups({ redisInstanceId, queueName }),
     enabled: state === "errors",
+  });
+
+  const schedulersQuery = useQuery({
+    queryKey: ["schedulers", redisInstanceId, queueName],
+    queryFn: () =>
+      rpcClient.scheduler.list({ redisInstanceId, queueName }),
+    enabled: state === "schedulers",
   });
 
   const jobs = jobsQuery.data?.pages.flat() ?? [];
@@ -359,6 +369,18 @@ function QueuePage() {
     void queueMetaQuery.refetch();
     void metricsQuery.refetch();
     void jobsQuery.refetch();
+    void schedulersQuery.refetch();
+  };
+
+  const runScheduler = async (schedulerId: string) => {
+    await rpcClient.scheduler.run({ redisInstanceId, queueName, schedulerId });
+    void schedulersQuery.refetch();
+  };
+
+  const removeScheduler = async (schedulerId: string) => {
+    await rpcClient.scheduler.remove({ redisInstanceId, queueName, schedulerId });
+    void schedulersQuery.refetch();
+    setSheetSchedulerId(undefined);
   };
 
   const executeAction = async (action: QueueAction) => {
@@ -633,7 +655,17 @@ function QueuePage() {
           ref={scrollRef}
           className="min-h-0 flex-1 overflow-y-auto overscroll-y-none"
         >
-          {state === "errors" ? (
+          {state === "schedulers" ? (
+            <SchedulerList
+              schedulers={schedulersQuery.data ?? []}
+              isLoading={schedulersQuery.isLoading}
+              canWrite={canWrite}
+              onOpenScheduler={(id) => setSheetSchedulerId(id)}
+              onRun={runScheduler}
+              onEdit={(id) => setSheetSchedulerId(id)}
+              onRemove={removeScheduler}
+            />
+          ) : state === "errors" ? (
             <FailedJobGroupsTable
               groups={errorsQuery.data ?? []}
               totalFailed={queueMetaQuery.data?.counts.failed ?? 0}
@@ -679,6 +711,29 @@ function QueuePage() {
               listJob={sheetListJob}
               canWrite={canWrite}
               onRemoved={closeJobSheet}
+            />
+          )}
+        </SheetContent>
+      </Sheet>
+
+      <Sheet
+        open={!!sheetSchedulerId}
+        onOpenChange={(open) => {
+          if (!open) setSheetSchedulerId(undefined);
+        }}
+      >
+        <SheetContent
+          side="right"
+          className="flex w-full flex-col gap-0 overflow-hidden p-0 data-[side=right]:sm:max-w-2xl"
+          aria-describedby={undefined}
+        >
+          {sheetSchedulerId && (
+            <SchedulerDetailPanel
+              redisInstanceId={redisInstanceId}
+              queueName={queueName}
+              schedulerId={sheetSchedulerId}
+              canWrite={canWrite}
+              onRemoved={() => setSheetSchedulerId(undefined)}
             />
           )}
         </SheetContent>

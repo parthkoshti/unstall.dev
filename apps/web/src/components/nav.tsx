@@ -98,6 +98,12 @@ function NavInner({ currentPath }: NavProps) {
               currentPath={currentPath}
             />
             <a
+              href="/roadmap"
+              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Roadmap
+            </a>
+            <a
               href="/docs/introduction"
               className="text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
@@ -161,6 +167,13 @@ function NavInner({ currentPath }: NavProps) {
                 onClick={() => setOpen(false)}
               >
                 Self Hosting Docs
+              </a>
+              <a
+                href="/roadmap"
+                className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                onClick={() => setOpen(false)}
+              >
+                Roadmap
               </a>
               <a
                 href="https://github.com/parthkoshti/unqueue.dev"

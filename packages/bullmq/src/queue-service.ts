@@ -3,7 +3,7 @@ import type { RedisConnection } from "./redis-types.js";
 import { withQueue } from "./queue-runner.js";
 import type { QueuePoolContext } from "./queue-pool-context.js";
 import { jobLogSchema } from "@unqueue/validators";
-import type { FailedJobGroup, JobDetail, JobSummary, ParsedLog, QueueCounts, QueueMeta } from "./types.js";
+import type { FailedJobGroup, JobDetail, JobSummary, ParsedLog, QueueCounts, QueueMeta, SchedulerSummary } from "./types.js";
 
 export async function getQueueMeta(
   connection: RedisConnection,
@@ -366,4 +366,73 @@ export async function getQueueMetaBatch(
     };
     return { name, isPaused: bool(o + 9), workers: num(o + 10), counts };
   });
+}
+
+function toSchedulerSummary(scheduler: { key: string; name: string; pattern?: string; every?: number; immediately?: boolean; startDate?: number; endDate?: number; tz?: string; limit?: number; prevMillis?: number; nextMillis?: number; count?: number; template?: { data?: unknown; opts?: Record<string, unknown> } }): SchedulerSummary {
+  return {
+    id: scheduler.key,
+    name: scheduler.name,
+    pattern: scheduler.pattern,
+    every: scheduler.every,
+    immediately: scheduler.immediately,
+    startDate: scheduler.startDate,
+    endDate: scheduler.endDate,
+    tz: scheduler.tz,
+    limit: scheduler.limit,
+    prevMillis: scheduler.prevMillis,
+    nextMillis: scheduler.nextMillis,
+    count: scheduler.count,
+    opts: scheduler.template?.opts
+      ? {
+          jobId: typeof scheduler.template.opts.jobId === "string" ? scheduler.template.opts.jobId as string : undefined,
+          priority: typeof scheduler.template.opts.priority === "number" ? scheduler.template.opts.priority as number : undefined,
+          attempts: typeof scheduler.template.opts.attempts === "number" ? scheduler.template.opts.attempts as number : undefined,
+          backoff: scheduler.template.opts.backoff,
+          removeOnComplete: scheduler.template.opts.removeOnComplete,
+          removeOnFail: scheduler.template.opts.removeOnFail,
+        }
+      : undefined,
+  };
+}
+
+export async function listSchedulers(
+  connection: RedisConnection,
+  queueName: string,
+  prefix: string,
+  pool?: QueuePoolContext,
+): Promise<SchedulerSummary[]> {
+  return withQueue(
+    connection,
+    queueName,
+    prefix,
+    async (queue) => {
+      const schedulers = await queue.getJobSchedulers();
+      return schedulers.map(toSchedulerSummary);
+    },
+    pool,
+  );
+}
+
+export async function getScheduler(
+  connection: RedisConnection,
+  queueName: string,
+  prefix: string,
+  schedulerId: string,
+  pool?: QueuePoolContext,
+): Promise<SchedulerSummary | null> {
+  return withQueue(
+    connection,
+    queueName,
+    prefix,
+    async (queue) => {
+      try {
+        const scheduler = await queue.getJobScheduler(schedulerId);
+        if (!scheduler) return null;
+        return toSchedulerSummary(scheduler);
+      } catch {
+        return null;
+      }
+    },
+    pool,
+  );
 }

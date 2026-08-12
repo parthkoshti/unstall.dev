@@ -11,6 +11,8 @@ export {
   listJobs,
   listJobIds,
   listFailedJobGroups,
+  listSchedulers,
+  getScheduler,
   type JobState,
   type JobListState,
   getJob,
@@ -26,5 +28,6 @@ export type {
   FailedJobGroup,
   QueueCounts,
   QueueMeta,
+  SchedulerSummary,
   RedisInstanceConfig,
 } from "./types.js";

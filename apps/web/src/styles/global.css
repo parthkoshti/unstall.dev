@@ -7,8 +7,10 @@
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-.site-title {
-  gap: 0.5rem;
+/* Restore browser swipe gestures (iOS Safari edge-swipe back, Android swipe) */
+html {
+  touch-action: auto !important;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .site-title img {

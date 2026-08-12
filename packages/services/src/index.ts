@@ -12,6 +12,7 @@ import { createQueueAdminService } from "./services/queue-admin.service.js";
 import { createQueueService } from "./services/queue.service.js";
 import { createRedisInstanceRegistry } from "./redis-instance-registry.js";
 import { createRedisService } from "./services/redis.service.js";
+import { createSchedulerService } from "./services/scheduler.service.js";
 import { createStatsService } from "./services/stats.service.js";
 import { createWorkspaceService } from "./services/workspace.service.js";
 
@@ -24,6 +25,7 @@ export type Services = {
   job: ReturnType<typeof createJobService>;
   jobActions: ReturnType<typeof createJobActionsService>;
   queueAdmin: ReturnType<typeof createQueueAdminService>;
+  scheduler: ReturnType<typeof createSchedulerService>;
   bookmark: ReturnType<typeof createBookmarkService>;
   alert: ReturnType<typeof createAlertService>;
   invite: ReturnType<typeof createInviteService>;
@@ -81,6 +83,10 @@ export function createServices(input: CreateServicesInput): Services {
     queueAdmin: createQueueAdminService(
       deps,
       createServiceLogger(rootLogger, "queue-admin"),
+    ),
+    scheduler: createSchedulerService(
+      deps,
+      createServiceLogger(rootLogger, "scheduler"),
     ),
     bookmark: createBookmarkService(deps, createServiceLogger(rootLogger, "bookmark")),
     alert: createAlertService(deps, createServiceLogger(rootLogger, "alert")),

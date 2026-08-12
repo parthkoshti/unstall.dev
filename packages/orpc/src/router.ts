@@ -516,6 +516,59 @@ const queueAdminRouter = {
     }),
 };
 
+const schedulerActionInput = z.object({
+  redisInstanceId: z.string().length(24),
+  queueName: z.string(),
+  schedulerId: z.string(),
+});
+
+const schedulerRouter = {
+  list: base
+    .input(
+      z.object({
+        redisInstanceId: z.string().length(24),
+        queueName: z.string(),
+      }),
+    )
+    .use(authed)
+    .handler(async ({ context, input }) => {
+      return context.services.scheduler.list(toActor(context), input);
+    }),
+
+  get: base
+    .input(schedulerActionInput)
+    .use(authed)
+    .handler(async ({ context, input }) => {
+      return context.services.scheduler.get(toActor(context), input);
+    }),
+
+  run: base
+    .input(schedulerActionInput)
+    .use(authed)
+    .handler(async ({ context, input }) => {
+      return context.services.scheduler.run(toActor(context), input);
+    }),
+
+  remove: base
+    .input(schedulerActionInput)
+    .use(authed)
+    .handler(async ({ context, input }) => {
+      return context.services.scheduler.remove(toActor(context), input);
+    }),
+
+  update: base
+    .input(
+      schedulerActionInput.extend({
+        pattern: z.string().optional(),
+        every: z.number().int().min(1).optional(),
+      }),
+    )
+    .use(authed)
+    .handler(async ({ context, input }) => {
+      return context.services.scheduler.update(toActor(context), input);
+    }),
+};
+
 const bookmarkRouter = {
   listFolders: base
     .input(z.object({ workspaceId: z.string().length(24) }))
@@ -719,6 +772,7 @@ export const appRouter = {
   job: jobRouter,
   jobActions: jobActionsRouter,
   queueAdmin: queueAdminRouter,
+  scheduler: schedulerRouter,
   bookmark: bookmarkRouter,
   alert: alertRouter,
   invite: inviteRouter,

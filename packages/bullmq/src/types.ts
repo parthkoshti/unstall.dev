@@ -66,6 +66,29 @@ export type FailedJobGroup = {
   stacktrace?: string[];
 };
 
+export type SchedulerSummary = {
+  id: string;
+  name: string;
+  pattern?: string;
+  every?: number;
+  immediately?: boolean;
+  startDate?: number;
+  endDate?: number;
+  tz?: string;
+  limit?: number;
+  prevMillis?: number;
+  nextMillis?: number;
+  count?: number;
+  opts?: {
+    jobId?: string;
+    priority?: number;
+    attempts?: number;
+    backoff?: unknown;
+    removeOnComplete?: unknown;
+    removeOnFail?: unknown;
+  };
+};
+
 export type RedisInstanceConfig = {
   id: string;
   workspaceId: string;

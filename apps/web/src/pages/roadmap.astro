@@ -1,0 +1,108 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+
+const title = "Roadmap — unqueue";
+const description =
+  "What we've shipped, what's coming next, and what we're exploring for unqueue.";
+
+const columns = [
+  {
+    title: "Shipped",
+    color: "bg-success",
+    textColor: "text-success",
+    items: [
+      { title: "Real-time queue monitoring", description: "Live queue state streamed via BullMQ QueueEvents." },
+      { title: "Job inspection", description: "View input data, return values, and full stack traces on every failed job." },
+      { title: "Auto-discovery", description: "Queues appear automatically via BullMQ key prefix scan." },
+      { title: "Admin actions", description: "Retry, pause, drain, clean, and obliterate queues from the dashboard." },
+      { title: "Worker log capture", description: "Structured logs tied to the specific job that produced them." },
+      { title: "Discord alerts", description: "Notifications on queue spikes and failure rate thresholds." },
+      { title: "Multi-connection support", description: "Connect multiple Redis instances — one per environment, region, or microservice." },
+      { title: "Custom key prefixes", description: "Configure BullMQ key prefix per Redis connection." },
+      { title: "Redis provider support", description: "Works with Redis Cloud, Upstash, ElastiCache, Aiven, Azure Cache, and self-hosted." },
+      { title: "BullMQ v3 & v4", description: "Full support for BullMQ v3 and v4 via direct Redis key schema reads." },
+      { title: "BullMQ Pro support", description: "Pro features like groups displayed where applicable." },
+      { title: "Docker Compose deploy", description: "Self-host with a single docker compose up command." },
+      { title: "Performance metrics", description: "Throughput, latency, and failure rate graphs with historical trends." },
+      { title: "Custom alerting rules", description: "Configurable thresholds for failure rates, queue depth, and latency." },
+    ],
+  },
+  {
+    title: "Planned",
+    color: "bg-warning",
+    textColor: "text-warning",
+    items: [
+      { title: "Job search & filtering", description: "Search across all jobs by status, input data, or error message." },
+      { title: "Flow visualization", description: "Map dependencies between queues and see job flow across workers." },
+      { title: "Scheduled jobs view", description: "Inspect repeatable jobs, cron schedules, and next run times." },
+      { title: "Team collaboration", description: "Shared connections, annotations, and activity feed." },
+      { title: "Webhook integrations", description: "Trigger external systems on job failures or queue events." },
+      { title: "API access", description: "Programmatic access to queue data and admin actions." },
+      { title: "Load testing mode", description: "Simulate job volume to test worker resilience before production." },
+    ],
+  },
+  {
+    title: "Considering",
+    color: "bg-muted-foreground",
+    textColor: "text-muted-foreground",
+    items: [
+      { title: "Cost estimation", description: "Estimate Redis compute and memory costs per queue." },
+      { title: "Plugin ecosystem", description: "Community-contributed alert channels, exporters, and integrations." },
+      { title: "Mobile app", description: "Monitor queues and receive alerts on iOS and Android." },
+    ],
+  },
+];
+---
+
+<BaseLayout title={title} description={description} canonical="https://unqueue.dev/roadmap">
+  <section class="relative pt-32 pb-24">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6">
+      <div class="mb-16 max-w-lg">
+        <h1 class="mb-4 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+          Roadmap
+        </h1>
+        <p class="text-lg text-muted-foreground">
+          What we've shipped, what we're building, and what we're exploring.
+        </p>
+      </div>
+
+      <div class="grid gap-6 md:grid-cols-3">
+        {columns.map((col) => (
+          <div class="space-y-3">
+            <div class="flex items-center gap-2">
+              <span class={`size-2 rounded-full ${col.color}`} />
+              <h2 class={`text-sm font-semibold uppercase tracking-wider ${col.textColor}`}>
+                {col.title}
+              </h2>
+              <span class="ml-auto rounded-full border border-border bg-background/50 px-2 py-0.5 text-xs text-muted-foreground">
+                {col.items.length}
+              </span>
+            </div>
+            <div class="flex flex-col gap-2">
+              {col.items.map((item) => (
+                <div class="flex-1 rounded-lg border border-border bg-card p-4 transition-colors hover:bg-accent/50">
+                  <h3 class="text-sm font-semibold text-foreground">{item.title}</h3>
+                  <p class="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{item.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div class="mt-16 rounded-2xl border border-border bg-card/50 p-6 text-center">
+        <p class="text-sm text-muted-foreground">
+          Have an idea or feature request?
+          <a
+            href="https://github.com/parthkoshti/unqueue.dev/issues"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="ml-1 font-medium text-primary underline-offset-4 hover:underline"
+          >
+            Open an issue on GitHub →
+          </a>
+        </p>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

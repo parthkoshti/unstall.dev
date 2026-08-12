@@ -189,3 +189,74 @@ export async function obliterateQueue(
     queue.obliterate({ force: true }),
   );
 }
+
+export async function removeScheduler(
+  connection: RedisConnection,
+  queueName: string,
+  prefix: string,
+  schedulerId: string,
+): Promise<void> {
+  await withQueue(connection, queueName, prefix, async (queue) => {
+    await queue.removeJobScheduler(schedulerId);
+  });
+}
+
+export async function runScheduler(
+  connection: RedisConnection,
+  queueName: string,
+  prefix: string,
+  schedulerId: string,
+): Promise<void> {
+  await withQueue(connection, queueName, prefix, async (queue) => {
+    const scheduler = await queue.getJobScheduler(schedulerId);
+    if (!scheduler) throw new Error("Scheduler not found");
+
+    await queue.upsertJobScheduler(
+      schedulerId,
+      {
+        pattern: scheduler.pattern,
+        every: scheduler.every,
+        immediately: true,
+      },
+      {
+        name: scheduler.name,
+        data: { source: "manual-run", ranAt: new Date().toISOString() },
+      },
+    );
+  });
+}
+
+export async function updateScheduler(
+  connection: RedisConnection,
+  queueName: string,
+  prefix: string,
+  schedulerId: string,
+  updates: { pattern?: string; every?: number },
+): Promise<void> {
+  await withQueue(connection, queueName, prefix, async (queue) => {
+    const existing = await queue.getJobScheduler(schedulerId);
+    if (!existing) throw new Error("Scheduler not found");
+
+    const pattern = updates.pattern ?? existing.pattern;
+    const every = updates.every ?? existing.every;
+
+    if (!pattern && !every) {
+      throw new Error("Either pattern or every must be provided");
+    }
+
+    await queue.upsertJobScheduler(
+      schedulerId,
+      {
+        pattern: pattern ?? undefined,
+        every: every ?? undefined,
+        startDate: existing.startDate,
+        endDate: existing.endDate,
+        tz: existing.tz,
+        limit: existing.limit,
+      },
+      {
+        name: existing.name,
+      },
+    );
+  });
+}

@@ -72,6 +72,12 @@ const {
         document.documentElement.classList.toggle("dark", theme === "dark");
         document.documentElement.dataset.theme = theme;
         document.documentElement.style.colorScheme = theme;
+
+        // Enable browser swipe gestures (iOS Safari edge-swipe back)
+        document.addEventListener('DOMContentLoaded', function() {
+          document.documentElement.style.touchAction = 'auto';
+          document.body.style.touchAction = 'auto';
+        });
       })();
     </script>
   </head>
